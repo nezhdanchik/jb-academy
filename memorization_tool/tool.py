@@ -29,7 +29,7 @@ class Manage:
         self.update_menu = Menu()
 
         self.main_menu.options = [
-            Option('1', '1. Add a new flashcard', StateMenu.ADD_FLASHCARD_MENU),
+            Option('1', '1. Add flashcards', StateMenu.ADD_FLASHCARD_MENU),
             Option('2', '2. Practice flashcards', StateMenu.PRACTICE_FLASHCARD),
             Option('3', '3. Exit', StateMenu.EXIT),
         ]
@@ -77,6 +77,31 @@ class Manage:
                 print(f'{choice} is not an option')
                 menu.print()
 
+    def practice(self):
+        flashcards = Flashcard.get_flashcards()
+        if len(flashcards) == 0:
+            print('There is no flashcard to practice!')
+            return StateMenu.MAIN_MENU
+        for flashcard in flashcards:
+            print(f'Question: {flashcard.question}')
+            choice = self.listen(self.question_menu)
+            match self.question_menu.options[choice].state:
+                case StateQuestion.ANSWER:
+                    print(f'Answer: {flashcard.answer}')
+                case StateQuestion.SKIP:
+                    continue
+                case StateQuestion.UPDATE_MENU:
+                    choice = self.listen(self.update_menu)
+                    match self.update_menu.options[choice].state:
+                        case StateQuestion.DELETE:
+                            flashcard.delete()
+                        case StateQuestion.EDIT:
+                            print(f'current question: {flashcard.question}')
+                            question = input('please write a new question:\n')
+                            print(f'current answer: {flashcard.answer}')
+                            answer = input('please write a new answer:\n')
+                            flashcard.update(question, answer)
+        return StateMenu.MAIN_MENU
 
     def run(self):
         while not self.end_program:
@@ -93,29 +118,7 @@ class Manage:
                     Flashcard.create_flashcard(question, answer)
                     self.current_state = StateMenu.ADD_FLASHCARD_MENU
                 case StateMenu.PRACTICE_FLASHCARD:
-                    flashcards = Flashcard.get_flashcards()
-                    if len(flashcards) == 0:
-                        print('There is no flashcard to practice!')
-                        self.current_state = StateMenu.MAIN_MENU
-                        continue
-                    for flashcard in flashcards:
-                        print(f'Question: {flashcard.question}')
-                        choice = self.listen(self.question_menu)
-                        match self.question_menu.options[choice].state:
-                            case StateQuestion.ANSWER:
-                                print(f'Answer: {flashcard.answer}')
-                            case StateQuestion.SKIP:
-                                continue
-                            case StateQuestion.UPDATE_MENU:
-                                choice = self.listen(self.update_menu)
-                                match self.update_menu.options[choice].state:
-                                    case StateQuestion.DELETE:
-                                        flashcard.delete()
-                                    case StateQuestion.EDIT:
-                                        question = input('Question:\n')
-                                        answer = input('Answer:\n')
-                                        flashcard.update(question, answer)
-                    self.current_state = StateMenu.MAIN_MENU
+                    self.current_state = self.practice()
                 case StateMenu.EXIT:
                     self.exit()
 

@@ -47,7 +47,7 @@ class FlashcardBase(Base):
         if answer and answer.replace(' ', '') == '':
             answer = None
         with Session(Database.engine) as session:
-            flashcard = session.query(FlashcardBase).get(flashcard_id)
+            flashcard = session.get(FlashcardBase, flashcard_id)
             flashcard.question = question if question else flashcard.question
             flashcard.answer = answer if answer else flashcard.answer
             session.commit()
@@ -55,7 +55,7 @@ class FlashcardBase(Base):
     @staticmethod
     def delete(flashcard_id):
         with Session(Database.engine) as session:
-            flashcard = session.query(FlashcardBase).get(flashcard_id)
+            flashcard = session.get(FlashcardBase, flashcard_id)
             session.delete(flashcard)
             session.commit()
 
